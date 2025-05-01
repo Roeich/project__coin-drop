@@ -1,13 +1,53 @@
 *,
 *::before,
-*::after{
+*::after {
     box-sizing: border-box;
 }
-body{
+
+body {
     margin: 0;
-    background-image: url("../img/body-bg.png");
+    background-image: url("../img/body-bg.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+.stage-container {
+    max-width: 360px;
+    margin: auto;
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+}
+
+.stage {
+    width: 100%;
+    position: relative;
+}
+
+.stage::after {
+    /* position: relative; */
+    content: "";
+    display: block;
+    padding-bottom: 150%;
+    background-image: url("../img/stage-bg.png");
     background-repeat: repeat-x;
     background-size: contain;
-    min-height: 100svh;
-    background-position: center;
+}
+.stage>* {
+    position: absolute;
+}
+.stage-canvas {
+    top: 33.4%;
+    left: 13.9%;
+    width: 72.5%;
+    height: 48.4%;
+    background-color: rgba(255, 166, 0, 0.534);
+}
+
+@media(min-width:1200px) {
+    body {
+        background-repeat: repeat-x;
+        background-size: contain;
+    }
 }

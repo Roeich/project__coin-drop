@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Canvas Plinko (Preset Result)</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background: #222;
+      border: 2px solid #444;
+    }
+  </style>
+</head>
+<body>
+  <h2>Canvas Plinko (Always Lands in Target Slot)</h2>
+  <label>Target slot (0-6): <input id="targetSlot" type="number" value="3" min="0" max="6" style="width: 50px;"></label>
+  <canvas id="canvas" width="600" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const spacing = 70;
+    const rows = 8;
+    const cols = 7;
+    const pegs = [];
+    const coinRadius = 10;
+    const pegRadius = 5;
+
+    const coin = {
+      x: 0,
+      y: 30,
+      path: [],
+      currentStep: 0,
+      dropping: false
+    };
+
+    function generatePegs() {
+      pegs.length = 0;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const offsetX = row % 2 === 0 ? 0 : spacing / 2;
+          const x = col * spacing + offsetX + 30;
+          const y = row * spacing + 100;
+          pegs.push({ x, y });
+        }
+      }
+    }
+
+    function drawPegs() {
+      ctx.fillStyle = '#fff';
+      for (const peg of pegs) {
+        ctx.beginPath();
+        ctx.arc(peg.x, peg.y, pegRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawCoin() {
+      ctx.fillStyle = 'gold';
+      ctx.beginPath();
+      ctx.arc(coin.x, coin.y, coinRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawSlots() {
+      const targetSlot = parseInt(document.getElementById('targetSlot').value || 3);
+      for (let i = 0; i <= cols; i++) {
+        const x = i * spacing + 30;
+        ctx.strokeStyle = "#888";
+        ctx.beginPath();
+        ctx.moveTo(x, canvas.height - 30);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "lime";
+      ctx.fillText("Target", targetSlot * spacing + 20, canvas.height - 40);
+    }
+
+    function resetCoin() {
+      coin.path = [];
+      coin.currentStep = 0;
+      coin.dropping = false;
+      coin.x = 0;
+      coin.y = 30;
+    }
+
+    function generatePathToSlot(targetSlot) {
+      const steps = rows;
+      let currentSlot = Math.floor(cols / 2); // Start from center
+      const path = [];
+
+      for (let i = 0; i < steps; i++) {
+        if (currentSlot < targetSlot) {
+          path.push('R');
+          currentSlot++;
+        } else if (currentSlot > targetSlot) {
+          path.push('L');
+          currentSlot--;
+        } else {
+          // Randomize when aligned
+          path.push(Math.random() > 0.5 ? 'L' : 'R');
+        }
+      }
+
+      return path;
+    }
+
+    function animateDrop() {
+      if (!coin.dropping) return;
+
+      if (coin.currentStep >= coin.path.length) {
+        return;
+      }
+
+      const direction = coin.path[coin.currentStep];
+      const dx = direction === 'L' ? -spacing / 2 : spacing / 2;
+      const dy = spacing;
+
+      const targetX = coin.x + dx;
+      const targetY = coin.y + dy;
+
+      const speed = 0.2;
+      coin.x += (targetX - coin.x) * speed;
+      coin.y += (targetY - coin.y) * speed;
+
+      // Snap to next step if close
+      if (Math.abs(coin.x - targetX) < 1 && Math.abs(coin.y - targetY) < 1) {
+        coin.x = targetX;
+        coin.y = targetY;
+        coin.currentStep++;
+      }
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPegs();
+      drawSlots();
+      drawCoin();
+
+      if (!coin.dropping) {
+        // Move coin left to right
+        if (!coin.vx) coin.vx = 2;
+        coin.x += coin.vx;
+        if (coin.x > canvas.width - coinRadius || coin.x < coinRadius) {
+          coin.vx *= -1;
+        }
+      } else {
+        animateDrop();
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener('click', () => {
+      if (!coin.dropping) {
+        const targetSlot = parseInt(document.getElementById('targetSlot').value || 3);
+        coin.path = generatePathToSlot(targetSlot);
+        coin.dropping = true;
+        coin.currentStep = 0;
+      }
+    });
+
+    document.addEventListener('keydown', () => {
+      if (!coin.dropping) {
+        const targetSlot = parseInt(document.getElementById('targetSlot').value || 3);
+        coin.path = generatePathToSlot(targetSlot);
+        coin.dropping = true;
+        coin.currentStep = 0;
+      }
+    });
+
+    generatePegs();
+    resetCoin();
+    update();
+  </script>
+</body>
+</html>
